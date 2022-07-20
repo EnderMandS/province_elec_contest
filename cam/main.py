@@ -1,13 +1,15 @@
 # By: EnderMandS - 周日 7月 17 2022
 
 import sensor, image, time
-from pyb import LED, Timer, Pin
+from pyb import LED, Timer, Pin, UART
+import ustruct
 
 
 # Const define
-RED_ = 0
-GREEN_ = 1
-YELLOW_ = 2
+NOT_AVAILABLE_ = 0
+RED_ = 1
+GREEN_ = 2
+YELLOW_ = 3
 
 PI_ = 3.14159265358979
 
@@ -21,10 +23,12 @@ YELLOW_THRESHOLD_ = (70, 100, -20, 20, 0, 127)
 YELLOW_X_TOLERANCE_ = 10
 YELLOW_Y_TOLERANCE_ = 10
 
+
 # Board LED init
 red_led     = LED(1)
 green_led   = LED(2)
 blue_led    = LED(3)
+
 
 class TrafficLightFilter:
     def __init__(self):
@@ -54,12 +58,12 @@ class TrafficLightFilter:
 class TrafficLight:
     def __init__(self):
         self.current_color = GREEN_
-        self.available = False
         # Filter init
         self.red_filter     = TrafficLightFilter()
         self.yellow_filter  = TrafficLightFilter()
         self.green_filter   = TrafficLightFilter()
         self.total_filter   = TrafficLightFilter()
+
 
     def trafficColorGet(self, img, c, color_threshold):
         rec_area = ( c.x()-c.r(), c.y()-c.r(), 2*c.r(), 2*c.r() )
@@ -76,6 +80,7 @@ class TrafficLight:
             x_stride = x_stride, y_stride = y_stride,
             area_threshold = area_threshold,
             pixels_threshold = 10, merge = False)
+
 
     def trafficLightFind(self, img):
         circles = img.find_circles(threshold = 5000,
@@ -120,7 +125,7 @@ class TrafficLight:
 
     def filterOutcome(self):
         if self.total_filter.status :
-            self.available = True
+            self.current_color = NOT_AVAILABLE_
             if self.red_filter.status :
                 self.current_color = RED_
                 red_led.on()
@@ -132,13 +137,12 @@ class TrafficLight:
                 self.current_color = GREEN_
                 green_led.on()
             else :
-                self.available = False
+                self.current_color = NOT_AVAILABLE_
                 red_led.off()
                 green_led.off()
                 blue_led.off()
-
         else :
-            self.available = False
+            self.current_color = NOT_AVAILABLE_
             red_led.off()
             green_led.off()
             blue_led.off()
@@ -155,6 +159,10 @@ sensor.set_auto_whitebal(False)
 # Clock init
 clock = time.clock()
 
+# Uart init P4-TX P5-RX
+uart = UART(3, 9600, timeout_char = 100 )
+uart.init(9600, bits=8, parity=None, stop=1, timeout_char = 100)
+
 ## Timer callback
 #def Tim14Callback(timer):   # LED工作指示
     #pass
@@ -170,4 +178,5 @@ while(True):
     img = sensor.snapshot()
     traffic_light.trafficLightFind(img)
     traffic_light.filterOutcome()
+    uart.write(ustruct.pack("<b",traffic_light.current_color))
     print(clock.fps())
