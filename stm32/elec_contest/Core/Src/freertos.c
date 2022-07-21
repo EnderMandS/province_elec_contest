@@ -25,7 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "openmv_uart.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,7 +52,19 @@ osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
   .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for openmvUart */
+osThreadId_t openmvUartHandle;
+const osThreadAttr_t openmvUart_attributes = {
+  .name = "openmvUart",
+  .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for uart5_Data_Queue */
+osMessageQueueId_t uart5_Data_QueueHandle;
+const osMessageQueueAttr_t uart5_Data_Queue_attributes = {
+  .name = "uart5_Data_Queue"
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -61,6 +73,7 @@ const osThreadAttr_t defaultTask_attributes = {
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
+extern void OpenMVUartTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -86,6 +99,10 @@ void MX_FREERTOS_Init(void) {
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
 
+  /* Create the queue(s) */
+  /* creation of uart5_Data_Queue */
+  uart5_Data_QueueHandle = osMessageQueueNew (1, sizeof(Uart5Data), &uart5_Data_Queue_attributes);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -93,6 +110,9 @@ void MX_FREERTOS_Init(void) {
   /* Create the thread(s) */
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+
+  /* creation of openmvUart */
+  openmvUartHandle = osThreadNew(OpenMVUartTask, NULL, &openmvUart_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
