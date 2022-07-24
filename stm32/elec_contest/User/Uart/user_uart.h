@@ -8,17 +8,18 @@
 #include "main.h"
 #include "FreeRTOS.h"
 #include "cmsis_os2.h"
-#include "string"
+#include <string>
+#include "queue.h"
 
 namespace user_uart {
   class UartReceive {
   public:
-    UartReceive(UART_HandleTypeDef *huart, uint32_t data_length, const std::string &queue_name);
+    UartReceive(UART_HandleTypeDef *huart, uint32_t data_length, const std::string& queue_name);
     HAL_StatusTypeDef uartReceiveStart();
     HAL_StatusTypeDef uartReceiveStop();
     void uartCallback();
 
-    osMessageQueueId_t queue_handle;
+    xQueueHandle queue_handle;
     uint32_t length;
 
   private:

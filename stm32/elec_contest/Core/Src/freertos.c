@@ -25,7 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "openmv_uart.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,11 +61,6 @@ const osThreadAttr_t openmvUart_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for uart5_Data_Queue */
-osMessageQueueId_t uart5_Data_QueueHandle;
-const osMessageQueueAttr_t uart5_Data_Queue_attributes = {
-  .name = "uart5_Data_Queue"
-};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -98,10 +93,6 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
-
-  /* Create the queue(s) */
-  /* creation of uart5_Data_Queue */
-  uart5_Data_QueueHandle = osMessageQueueNew (1, sizeof(Uart5Data), &uart5_Data_Queue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */

@@ -6,22 +6,9 @@
 #define ELEC_CONTEST_OPENMV_UART_H
 
 #include "main.h"
+#include "user_uart.h"
 
-#define UART5_DATA_LENGTH_ 1
-
-typedef struct {
-  uint8_t status[UART5_DATA_LENGTH_];
-} Uart5Data;
-
-enum {
-  NO_AVAILABLE_,
-  RED_,
-  GREEN,
-  YELLOW_
-};
-
-void uart5Callback(void);
-
-extern Uart5Data uart5_data;
+#define UART_HANDLE huart5
+#define DATA_LENGTH 1
 
 #endif //ELEC_CONTEST_OPENMV_UART_H
