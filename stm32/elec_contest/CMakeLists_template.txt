@@ -49,7 +49,8 @@ else ()
 endif ()
 
 include_directories(${includes}
-    User/OpenMV)
+    User/OpenMV
+    User/Uart)
 
 add_definitions(${defines})
 
