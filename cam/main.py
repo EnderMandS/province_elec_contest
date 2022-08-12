@@ -13,22 +13,17 @@ YELLOW_ = 3
 
 PI_ = 3.14159265358979
 
-ROUNDNESS_THRESHOLD_ = 0.85
+ROUNDNESS_THRESHOLD_ = 0.8
 FILTER_FRAME_CNT_ = 5
 
 GREEN_THRESHOLD_ = (72, 95, -128, -48, 12, 86)
 RED_THRESHOLD_ = (50, 80, 50, 100, 30, 100)
 YELLOW_THRESHOLD_ = (70, 100, -20, 20, 0, 127)
 
-YELLOW_X_TOLERANCE_ = 10
-YELLOW_Y_TOLERANCE_ = 10
-
-
 # Board LED init
 red_led     = LED(1)
 green_led   = LED(2)
 blue_led    = LED(3)
-
 
 class TrafficLightFilter:
     def __init__(self):
@@ -89,6 +84,9 @@ class TrafficLight:
 
         if circles == [] :
             self.total_filter.iterate(False)
+            self.red_filter.iterate(False)
+            self.green_filter.iterate(False)
+            self.yellow_filter.iterate(False)
         else :
             red_find = yellow_find = green_find = False
 
@@ -125,7 +123,6 @@ class TrafficLight:
 
     def filterOutcome(self):
         if self.total_filter.status :
-            self.current_color = NOT_AVAILABLE_
             if self.red_filter.status :
                 self.current_color = RED_
                 red_led.on()
