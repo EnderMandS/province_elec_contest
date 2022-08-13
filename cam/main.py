@@ -16,44 +16,24 @@ PI_ = 3.14159265358979
 ROUNDNESS_THRESHOLD_ = 0.8
 FILTER_FRAME_CNT_ = 5
 
-GREEN_THRESHOLD_ = (72, 95, -128, -48, 12, 86)
-RED_THRESHOLD_ = (50, 80, 50, 100, 30, 100)
-YELLOW_THRESHOLD_ = (70, 100, -20, 20, 0, 127)
+#GREEN_THRESHOLD_ = (72, 95, -128, -48, 12, 86)
+#RED_THRESHOLD_ = (50, 80, 50, 100, 30, 100)
+#YELLOW_THRESHOLD_ = (70, 100, -20, 20, 0, 127)
+
+GREEN_THRESHOLD_ = (0, 100, -128, -20, -60, 60)
+RED_THRESHOLD_ = (0, 100, 10, 127, -60, 70)
+YELLOW_THRESHOLD_ = (20, 100, -50, 50, 0, 127)
 
 # Board LED init
 red_led     = LED(1)
 green_led   = LED(2)
 blue_led    = LED(3)
 
-# 
+# Information GPIO
 P0 = Pin('P0', Pin.OUT_PP)
 P1 = Pin('P1', Pin.OUT_PP)
 P0.low()
 P1.low()
-
-# class TrafficLightFilter:
-#     def __init__(self):
-#         self.count = 0
-#         self.status = False
-
-#     def iterate(self, status_input):
-#         if status_input == self.status :
-#             self.count = 0
-#         else :
-#             self.count = self.count + 1
-#             if self.count >= FILTER_FRAME_CNT_ :
-#                 self.reverse()
-
-#     def clear(self) :
-#         self.count = 0
-#         self.status = False
-
-#     def reverse(self) :
-#         self.count = 0
-#         if self.status :
-#             self.status = False
-#         else :
-#             self.status = True
 
 FILTER_UP_THRESHOLD_ = 3
 FILTER_DOWN_THRESHOLD_ = 10
@@ -66,7 +46,7 @@ class TrafficLightFilter:
         if status_input == self.status :
             self.count = 0
         else:
-            ++self.count
+            self.count = self.count+1
             if self.status==False:
                 if self.count >= FILTER_UP_THRESHOLD_:
                     self.reverse()
@@ -77,14 +57,14 @@ class TrafficLightFilter:
     def reverse(self):
         self.count = 0
         if self.status:
-            self.status = False
+            self.status = False``
         else:
             self.status = True
 
 
 class TrafficLight:
     def __init__(self):
-        self.current_color = GREEN_
+        self.current_color = NOT_AVAILABLE_
         # Filter init
         self.red_filter     = TrafficLightFilter()
         self.yellow_filter  = TrafficLightFilter()
@@ -109,12 +89,12 @@ class TrafficLight:
             pixels_threshold = 10, merge = True)
 
     def colorFind(self, img, c, color_threshold):
-        area = (c.x()-c.r()/2, c.y()-c.r()/2, c.r(), c.r())
+        area = ((int)(c.x()-c.r()/2), (int)(c.y()-c.r()/2), c.r(), c.r())
 
         statistics = img.get_statistics(roi=area)
-        if color_threshold(0)<statistics.l_mode()<color_threshold(1) and \
-           color_threshold(2)<statistics.a_mode()<color_threshold(3) and \
-           color_threshold(4)<statistics.a_mode()<color_threshold(5):
+        if color_threshold[0]<statistics.l_mode()<color_threshold[1] and \
+           color_threshold[2]<statistics.a_mode()<color_threshold[3] and \
+           color_threshold[4]<statistics.a_mode()<color_threshold[5]:
             return True
         return False
 
@@ -135,34 +115,23 @@ class TrafficLight:
                 rec_area = ( c.x()-c.r(), c.y()-c.r(), 2*c.r(), 2*c.r() )
                 img.draw_rectangle(rec_area, color = (0, 0, 255))
 
-                # red_blobs = self.trafficColorGet(img, c, RED_THRESHOLD_)
-                # for blo in red_blobs:
-                #     if blo.roundness()>ROUNDNESS_THRESHOLD_ :
-                #         img.draw_rectangle(blo.rect(), color = (255, 0, 0))
-                #         red_find = True
+                red_blobs = self.trafficColorGet(img, c, RED_THRESHOLD_)
+                for blo in red_blobs:
+                    if blo.roundness()>ROUNDNESS_THRESHOLD_ :
+                        img.draw_rectangle(blo.rect(), color = (255, 0, 0))
+                        red_find = True
 
-                # green_blobs = self.trafficColorGet(img, c, GREEN_THRESHOLD_)
-                # for blo in green_blobs:
-                #     if blo.roundness()>ROUNDNESS_THRESHOLD_ :
-                #         img.draw_rectangle(blo.rect(), color = (0, 255, 0))
-                #         green_find = True
+                green_blobs = self.trafficColorGet(img, c, GREEN_THRESHOLD_)
+                for blo in green_blobs:
+                    if blo.roundness()>ROUNDNESS_THRESHOLD_ :
+                        img.draw_rectangle(blo.rect(), color = (0, 255, 0))
+                        green_find = True
 
-                # yellow_blobs = self.trafficColorGet(img, c, YELLOW_THRESHOLD_)
-                # for blo in yellow_blobs:
-                #     if blo.roundness()>ROUNDNESS_THRESHOLD_ :
-                #         img.draw_rectangle(blo.rect(), color = (255, 255, 0))
-                #         yellow_find = True
-
-                red_find = self.colorFind(img, c, RED_THRESHOLD_)
-                green_find = self.colorFind(img, c, GREEN_THRESHOLD_)
-                yellow_find = self.colorFind(img, c, YELLOW_THRESHOLD_)
-
-                if red_find:
-                    img.draw_circle(c, color=(255, 0, 0))
-                if green_find:
-                    img.draw_circle(c, color=(0, 255, 0))
-                if yellow_find:
-                    img.draw_circle(c, color=(255, 255, 0))
+                yellow_blobs = self.trafficColorGet(img, c, YELLOW_THRESHOLD_)
+                for blo in yellow_blobs:
+                    if blo.roundness()>ROUNDNESS_THRESHOLD_ :
+                        img.draw_rectangle(blo.rect(), color = (255, 255, 0))
+                        yellow_find = True
 
             if (not red_find) and (not green_find) and (not yellow_find) :
                 self.total_filter.iterate(False)
@@ -178,6 +147,7 @@ class TrafficLight:
             if self.red_filter.status :
                 self.current_color = RED_
                 red_led.on()
+                green_led.off()
                 P0.high()   # 1
                 P1.low()
                 return
@@ -190,6 +160,7 @@ class TrafficLight:
                 return
             elif self.green_filter.status :
                 self.current_color = GREEN_
+                red_led.off()
                 green_led.on()
                 P0.low()    # 2
                 P1.high()
@@ -226,4 +197,4 @@ while(True):
     traffic_light.trafficLightFind(img)
     traffic_light.filterOutcome()
     uart.write(ustruct.pack("<b",traffic_light.current_color))
-    print(clock.fps())
+    print(traffic_light.current_color)
