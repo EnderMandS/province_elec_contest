@@ -25,6 +25,12 @@ red_led     = LED(1)
 green_led   = LED(2)
 blue_led    = LED(3)
 
+# 
+P0 = Pin('P0', Pin.OUT_PP)
+P1 = Pin('P1', Pin.OUT_PP)
+P0.low()
+P1.low()
+
 # class TrafficLightFilter:
 #     def __init__(self):
 #         self.count = 0
@@ -172,18 +178,26 @@ class TrafficLight:
             if self.red_filter.status :
                 self.current_color = RED_
                 red_led.on()
+                P0.high()   # 1
+                P1.low()
                 return
             elif self.yellow_filter.status :
                 self.current_color = YELLOW_
                 red_led.on()
                 green_led.on()
+                P0.high()   # 3
+                P1.high()
                 return
             elif self.green_filter.status :
                 self.current_color = GREEN_
                 green_led.on()
+                P0.low()    # 2
+                P1.high()
                 return
 
         self.current_color = NOT_AVAILABLE_
+        P0.low()    # 0
+        P1.low()
         red_led.off()
         green_led.off()
         blue_led.off()
