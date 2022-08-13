@@ -25,28 +25,54 @@ red_led     = LED(1)
 green_led   = LED(2)
 blue_led    = LED(3)
 
+# class TrafficLightFilter:
+#     def __init__(self):
+#         self.count = 0
+#         self.status = False
+
+#     def iterate(self, status_input):
+#         if status_input == self.status :
+#             self.count = 0
+#         else :
+#             self.count = self.count + 1
+#             if self.count >= FILTER_FRAME_CNT_ :
+#                 self.reverse()
+
+#     def clear(self) :
+#         self.count = 0
+#         self.status = False
+
+#     def reverse(self) :
+#         self.count = 0
+#         if self.status :
+#             self.status = False
+#         else :
+#             self.status = True
+
+FILTER_UP_THRESHOLD_ = 3
+FILTER_DOWN_THRESHOLD_ = 10
 class TrafficLightFilter:
     def __init__(self):
         self.count = 0
         self.status = False
 
-    def iterate(self, status_input):
+    def iterate(self, status_input:bool):
         if status_input == self.status :
             self.count = 0
-        else :
-            self.count = self.count + 1
-            if self.count >= FILTER_FRAME_CNT_ :
-                self.reverse()
+        else:
+            ++self.count
+            if self.status==False:
+                if self.count >= FILTER_UP_THRESHOLD_:
+                    self.reverse()
+            else:
+                if self.count >= FILTER_DOWN_THRESHOLD_:
+                    self.reverse()
 
-    def clear(self) :
+    def reverse(self):
         self.count = 0
-        self.status = False
-
-    def reverse(self) :
-        self.count = 0
-        if self.status :
+        if self.status:
             self.status = False
-        else :
+        else:
             self.status = True
 
 
@@ -63,7 +89,7 @@ class TrafficLight:
     def trafficColorGet(self, img, c, color_threshold):
         rec_area = ( c.x()-c.r(), c.y()-c.r(), 2*c.r(), 2*c.r() )
         x_stride = y_stride = c.r()-10
-        area_threshold = (int)(PI_*c.r()*c.r()*0.25)
+        area_threshold = (int)(PI_*c.r()*c.r()*0.5)
 
         if x_stride<5:
             x_stride = y_stride = 5
@@ -74,7 +100,7 @@ class TrafficLight:
             roi = rec_area,
             x_stride = x_stride, y_stride = y_stride,
             area_threshold = area_threshold,
-            pixels_threshold = 10, merge = False)
+            pixels_threshold = 10, merge = True)
 
 
     def trafficLightFind(self, img):
