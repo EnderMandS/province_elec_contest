@@ -102,6 +102,15 @@ class TrafficLight:
             area_threshold = area_threshold,
             pixels_threshold = 10, merge = True)
 
+    def colorFind(self, img, c, color_threshold):
+        area = (c.x()-c.r()/2, c.y()-c.r()/2, c.r(), c.r())
+
+        statistics = img.get_statistics(roi=area)
+        if color_threshold(0)<statistics.l_mode()<color_threshold(1) and \
+           color_threshold(2)<statistics.a_mode()<color_threshold(3) and \
+           color_threshold(4)<statistics.a_mode()<color_threshold(5):
+            return True
+        return False
 
     def trafficLightFind(self, img):
         circles = img.find_circles(threshold = 5000,
@@ -120,23 +129,34 @@ class TrafficLight:
                 rec_area = ( c.x()-c.r(), c.y()-c.r(), 2*c.r(), 2*c.r() )
                 img.draw_rectangle(rec_area, color = (0, 0, 255))
 
-                red_blobs = self.trafficColorGet(img, c, RED_THRESHOLD_)
-                for blo in red_blobs:
-                    if blo.roundness()>ROUNDNESS_THRESHOLD_ :
-                        img.draw_rectangle(blo.rect(), color = (255, 0, 0))
-                        red_find = True
+                # red_blobs = self.trafficColorGet(img, c, RED_THRESHOLD_)
+                # for blo in red_blobs:
+                #     if blo.roundness()>ROUNDNESS_THRESHOLD_ :
+                #         img.draw_rectangle(blo.rect(), color = (255, 0, 0))
+                #         red_find = True
 
-                green_blobs = self.trafficColorGet(img, c, GREEN_THRESHOLD_)
-                for blo in green_blobs:
-                    if blo.roundness()>ROUNDNESS_THRESHOLD_ :
-                        img.draw_rectangle(blo.rect(), color = (0, 255, 0))
-                        green_find = True
+                # green_blobs = self.trafficColorGet(img, c, GREEN_THRESHOLD_)
+                # for blo in green_blobs:
+                #     if blo.roundness()>ROUNDNESS_THRESHOLD_ :
+                #         img.draw_rectangle(blo.rect(), color = (0, 255, 0))
+                #         green_find = True
 
-                yellow_blobs = self.trafficColorGet(img, c, YELLOW_THRESHOLD_)
-                for blo in yellow_blobs:
-                    if blo.roundness()>ROUNDNESS_THRESHOLD_ :
-                        img.draw_rectangle(blo.rect(), color = (255, 255, 0))
-                        yellow_find = True
+                # yellow_blobs = self.trafficColorGet(img, c, YELLOW_THRESHOLD_)
+                # for blo in yellow_blobs:
+                #     if blo.roundness()>ROUNDNESS_THRESHOLD_ :
+                #         img.draw_rectangle(blo.rect(), color = (255, 255, 0))
+                #         yellow_find = True
+
+                red_find = self.colorFind(img, c, RED_THRESHOLD_)
+                green_find = self.colorFind(img, c, GREEN_THRESHOLD_)
+                yellow_find = self.colorFind(img, c, YELLOW_THRESHOLD_)
+
+                if red_find:
+                    img.draw_circle(c, color=(255, 0, 0))
+                if green_find:
+                    img.draw_circle(c, color=(0, 255, 0))
+                if yellow_find:
+                    img.draw_circle(c, color=(255, 255, 0))
 
             if (not red_find) and (not green_find) and (not yellow_find) :
                 self.total_filter.iterate(False)
@@ -152,23 +172,21 @@ class TrafficLight:
             if self.red_filter.status :
                 self.current_color = RED_
                 red_led.on()
+                return
             elif self.yellow_filter.status :
                 self.current_color = YELLOW_
                 red_led.on()
                 green_led.on()
+                return
             elif self.green_filter.status :
                 self.current_color = GREEN_
                 green_led.on()
-            else :
-                self.current_color = NOT_AVAILABLE_
-                red_led.off()
-                green_led.off()
-                blue_led.off()
-        else :
-            self.current_color = NOT_AVAILABLE_
-            red_led.off()
-            green_led.off()
-            blue_led.off()
+                return
+
+        self.current_color = NOT_AVAILABLE_
+        red_led.off()
+        green_led.off()
+        blue_led.off()
 
 
 # Sensor init
@@ -185,14 +203,6 @@ clock = time.clock()
 # Uart init P4-TX P5-RX
 uart = UART(3, 9600, timeout_char = 100 )
 uart.init(9600, bits=8, parity=None, stop=1, timeout_char = 100)
-
-## Timer callback
-#def Tim14Callback(timer):   # LED工作指示
-    #pass
-
-## Timer init
-#tim14 = Timer(14, freq = 1)
-#tim14.callback(Tim14Callback)
 
 traffic_light = TrafficLight()
 
